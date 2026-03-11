@@ -30,11 +30,30 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       id: user.id,
       email: user.email,
       role: user.role,
     });
+
+    // 🔐 Criar cookies de sessão
+    response.cookies.set("user_role", user.role, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24
+    });
+
+    response.cookies.set("user_id", user.id, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24
+    });
+
+    return response;
 
   } catch (error) {
     console.error("LOGIN ERROR:", error);
