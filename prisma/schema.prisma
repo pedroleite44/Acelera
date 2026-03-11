@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum UserRole {
+  admin
+  teacher
+  parent
+}
+model School {
+  id                 String      @id @default(uuid())
+  name               String
+  subscriptionStatus String      @default("trial")
+  users              User[]
+  classes            Classroom[]
+  createdAt          DateTime    @default(now())
+}
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  email        String      @unique
+  passwordHash String      @default("senha123")
+  role         UserRole    @default(teacher)
+  schoolId     String
+  school       School      @relation(fields: [schoolId], references: [id])
+  classes      Classroom[]
+  students     Student[]   @relation("ParentToStudent")
+  logsCreated  Log[]
+}
+model Classroom {
+  id        String    @id @default(uuid())
+  name      String
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id])
+  teacherId String?
+  teacher   User?     @relation(fields: [teacherId], references: [id])
+  students  Student[]
+}
+model Student {
+  id        String    @id @default(uuid())
+  name      String
+  classId   String
+  class     Classroom @relation(fields: [classId], references: [id])
+  parentId  String?
+  parent    User?     @relation("ParentToStudent", fields: [parentId], references: [id])
+  dailyLogs DailyLog[]
+  logs      Log[]
+}
+model DailyLog {
+  id          String   @id @default(uuid()) // ALTERADO AQUI: de cuid() para uuid()
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  studentName String
+  date        DateTime @default(now())
+  
+  // Registros do "3-Click System"
+  food        String?  // Ex: "tudo", "parcial", "recusou"
+  sleep       String?  // Ex: "bem", "agitado", "nao"
+  hygiene     String?  // Ex: "fralda", "banho"
+  
+  observations String? @db.Text
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([studentId])
+  @@index([date])
+}
+model Log {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  category  String   // Ex: 'Alimentacao', 'Sono', 'Higiene', 'Atividade', 'Saude'
+  detail    String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([studentId])
+  @@index([authorId])
+}
