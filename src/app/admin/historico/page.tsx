@@ -11,7 +11,17 @@ export default function HistoricoLogs() {
     fetch("/api/logs")
       .then(res => res.json())
       .then(data => {
-        setLogs(data);
+        // 🔥 evita crash se API falhar
+        if (Array.isArray(data)) {
+          setLogs(data);
+        } else {
+          console.error("Erro na API:", data);
+          setLogs([]);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setLogs([]);
         setLoading(false);
       });
   }, []);
@@ -38,26 +48,36 @@ export default function HistoricoLogs() {
             </thead>
 
             <tbody className="divide-y divide-slate-50">
+              {logs.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={4} className="text-center py-10 text-slate-400">
+                    Nenhum registro encontrado
+                  </td>
+                </tr>
+              )}
+
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-blue-50/30 transition-all group">
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-3 font-bold text-slate-600 text-sm">
                       <Calendar size={16} className="text-blue-500" />
-                      {new Date(log.createdAt).toLocaleDateString('pt-BR')}
+                      {log?.createdAt
+                        ? new Date(log.createdAt).toLocaleDateString("pt-BR")
+                        : "-"}
                     </div>
                   </td>
 
                   <td className="px-10 py-6 font-black text-slate-900">
-                    {log.studentName}
+                    {log?.studentName || "-"}
                   </td>
 
                   <td className="px-10 py-6">
                     <div className="flex gap-2">
                       <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
-                        Alim: {log.food}
+                        Alim: {log?.food || "-"}
                       </span>
                       <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
-                        Sono: {log.sleep}
+                        Sono: {log?.sleep || "-"}
                       </span>
                     </div>
                   </td>
@@ -92,12 +112,17 @@ export default function HistoricoLogs() {
             </h2>
 
             <div className="space-y-2 text-sm text-slate-700">
-              <p><strong>Aluno:</strong> {selectedLog.studentName}</p>
-              <p><strong>Data:</strong> {new Date(selectedLog.createdAt).toLocaleDateString('pt-BR')}</p>
-              <p><strong>Alimentação:</strong> {selectedLog.food}</p>
-              <p><strong>Sono:</strong> {selectedLog.sleep}</p>
-              <p><strong>Higiene:</strong> {selectedLog.hygiene}</p>
-              <p><strong>Observações:</strong> {selectedLog.observations}</p>
+              <p><strong>Aluno:</strong> {selectedLog?.studentName || "-"}</p>
+              <p>
+                <strong>Data:</strong>{" "}
+                {selectedLog?.createdAt
+                  ? new Date(selectedLog.createdAt).toLocaleDateString("pt-BR")
+                  : "-"}
+              </p>
+              <p><strong>Alimentação:</strong> {selectedLog?.food || "-"}</p>
+              <p><strong>Sono:</strong> {selectedLog?.sleep || "-"}</p>
+              <p><strong>Higiene:</strong> {selectedLog?.hygiene || "-"}</p>
+              <p><strong>Observações:</strong> {selectedLog?.observations || "-"}</p>
             </div>
 
             <button

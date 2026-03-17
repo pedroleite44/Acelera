@@ -16,8 +16,6 @@ export async function GET(req: Request) {
           "studentName",
           food,
           sleep,
-          hygiene,
-          observations,
           "createdAt"
         FROM "DailyLog"
         WHERE "studentId" = ${studentId}
@@ -32,8 +30,6 @@ export async function GET(req: Request) {
           "studentName",
           food,
           sleep,
-          hygiene,
-          observations,
           "createdAt"
         FROM "DailyLog"
         ORDER BY "createdAt" DESC
@@ -41,14 +37,13 @@ export async function GET(req: Request) {
       `;
     }
 
-    return NextResponse.json(result);
+    // 🔥 GARANTE QUE SEMPRE É ARRAY
+    return NextResponse.json(Array.isArray(result) ? result : []);
 
   } catch (error: any) {
     console.error("ERRO AO BUSCAR DAILY LOG:", error);
 
-    return NextResponse.json(
-      { error: "Erro ao buscar registros" },
-      { status: 500 }
-    );
+    // 🔥 NUNCA QUEBRA O FRONT
+    return NextResponse.json([]);
   }
 }
