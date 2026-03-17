@@ -60,148 +60,161 @@ export default function GestaoAlunos() {
     }
   };
 
+  const handleEditStudent = (student:any) => {
+    setStudentName(student.name);
+    setStudentClass(student.classId);
+    setShowModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteStudent = async (id:string) => {
+    if (!confirm("Tem certeza que deseja excluir?")) return;
+
+    const res = await fetch("/api/students", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id })
+    });
+
+    if (res.ok) {
+      loadData();
+    } else {
+      alert("Erro ao excluir");
+    }
+
+    setOpenMenuId(null);
+  };
+
   return (
-    <div className="p-10 max-w-7xl mx-auto space-y-10 bg-[#F8FAFC] min-h-screen">
+    <div
+      className="p-10 max-w-7xl mx-auto space-y-10 bg-[#F8FAFC] min-h-screen"
+      onClick={() => setOpenMenuId(null)} // 🔥 fecha menu ao clicar fora
+    >
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
-            Gestão de Alunos
-          </h1>
-          <p className="text-slate-500 font-bold mt-1 uppercase text-xs tracking-widest opacity-60">
-            Administração / Alunos
-          </p>
-        </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-black">Gestão de Alunos</h1>
 
         <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all shadow-2xl shadow-blue-200 active:scale-95 uppercase text-xs tracking-widest"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowModal(true);
+          }}
+          className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2"
         >
-          <Plus size={20} strokeWidth={3} />
-          Novo Aluno
+          <Plus size={18} /> Novo Aluno
         </button>
       </div>
 
-
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-3xl w-[400px] space-y-6 shadow-2xl">
-
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-black">Cadastrar Aluno</h2>
-              <button onClick={() => setShowModal(false)}>
-                <X />
-              </button>
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-white p-6 rounded-xl w-[400px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between mb-4">
+              <h2 className="font-bold">Aluno</h2>
+              <button onClick={() => setShowModal(false)}><X /></button>
             </div>
 
             <form onSubmit={handleCreateStudent} className="space-y-4">
-
               <input
-                type="text"
-                placeholder="Nome do aluno"
                 value={studentName}
                 onChange={(e)=>setStudentName(e.target.value)}
-                className="w-full p-4 bg-slate-50 rounded-xl"
+                placeholder="Nome"
+                className="w-full p-3 bg-gray-100 rounded"
               />
 
               <select
                 value={studentClass}
                 onChange={(e)=>setStudentClass(e.target.value)}
-                className="w-full p-4 bg-slate-50 rounded-xl"
+                className="w-full p-3 bg-gray-100 rounded"
               >
-                <option value="">Selecione a turma</option>
+                <option value="">Turma</option>
                 {classes.map((c:any)=>(
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
 
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold"
-              >
-                Cadastrar
+              <button className="w-full bg-blue-600 text-white p-3 rounded">
+                Salvar
               </button>
-
             </form>
-
           </div>
         </div>
       )}
 
-
       {/* TABELA */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl p-6 overflow-visible">
 
-        <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row gap-6 justify-between items-center">
-          <div className="relative w-full md:w-[400px]">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input
-              className="w-full pl-14 pr-6 py-4 bg-slate-50 rounded-2xl"
-              placeholder="Pesquisar por nome do aluno..."
-            />
-          </div>
+        {loading ? (
+          <Loader2 className="animate-spin mx-auto" />
+        ) : (
+          <table className="w-full">
 
-          <button className="p-4 bg-slate-50 rounded-2xl">
-            <Filter size={20} />
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-
-            <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em]">
+            <thead>
               <tr>
-                <th className="px-10 py-6">Informações do Aluno</th>
-                <th className="px-10 py-6">Turma</th>
-                <th className="px-10 py-6">Status</th>
-                <th className="px-10 py-6 text-right">Ações</th>
+                <th>Aluno</th>
+                <th>Turma</th>
+                <th>Status</th>
+                <th></th>
               </tr>
             </thead>
 
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={4} className="px-10 py-20 text-center">
-                    <Loader2 className="animate-spin mx-auto text-blue-600 mb-4" size={32} />
+              {students.map((s)=>(
+                <tr key={s.id} className="border-t hover:bg-gray-50">
+
+                  <td>{s.name}</td>
+
+                  <td>
+                    {classes.find(c=>c.id === s.classId)?.name || "-"}
                   </td>
-                </tr>
-              ) : (
-                students.map((s) => (
-                  <tr key={s.id} className="hover:bg-blue-50">
 
-                    <td className="px-10 py-6">
-                      <div className="flex gap-4 items-center">
-                        <div className="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center font-bold">
-                          {s.name.charAt(0)}
-                        </div>
-                        {s.name}
-                      </div>
-                    </td>
+                  <td className="text-green-600">Ativo</td>
 
-                    <td className="px-10 py-6">
-                      {classes.find(c => c.id === s.classId)?.name || "-"}
-                    </td>
-
-                    <td className="px-10 py-6">
-                      <span className="text-green-600 font-bold">Ativo</span>
-                    </td>
-
-                    <td className="px-10 py-6 text-right">
+                  <td className="text-right relative">
+                    <button
+                      onClick={(e)=>{
+                        e.stopPropagation(); // 🔥 evita fechar
+                        setOpenMenuId(openMenuId === s.id ? null : s.id);
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded"
+                    >
                       <MoreHorizontal />
-                    </td>
+                    </button>
 
-                  </tr>
-                ))
-              )}
+                    {openMenuId === s.id && (
+                      <div className="absolute right-0 mt-2 bg-white shadow-xl rounded-xl p-2 w-40 z-50 border">
 
+                        <button
+                          onClick={() => handleEditStudent(s)}
+                          className="block w-full text-left px-3 py-2 hover:bg-gray-100"
+                        >
+                          ✏️ Editar
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteStudent(s.id)}
+                          className="block w-full text-left px-3 py-2 hover:bg-red-100 text-red-600"
+                        >
+                          🗑 Excluir
+                        </button>
+
+                      </div>
+                    )}
+                  </td>
+
+                </tr>
+              ))}
             </tbody>
 
           </table>
-        </div>
+        )}
 
       </div>
 
