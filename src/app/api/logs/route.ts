@@ -14,8 +14,6 @@ export async function GET(req: Request) {
           id,
           "studentId",
           "studentName",
-          food,
-          sleep,
           "createdAt"
         FROM "DailyLog"
         WHERE "studentId" = ${studentId}
@@ -28,8 +26,6 @@ export async function GET(req: Request) {
           id,
           "studentId",
           "studentName",
-          food,
-          sleep,
           "createdAt"
         FROM "DailyLog"
         ORDER BY "createdAt" DESC
@@ -37,13 +33,10 @@ export async function GET(req: Request) {
       `;
     }
 
-    // 🔥 GARANTE QUE SEMPRE É ARRAY
     return NextResponse.json(Array.isArray(result) ? result : []);
 
   } catch (error: any) {
     console.error("ERRO AO BUSCAR DAILY LOG:", error);
-
-    // 🔥 NUNCA QUEBRA O FRONT
     return NextResponse.json([]);
   }
 }

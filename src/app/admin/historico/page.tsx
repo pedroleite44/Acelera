@@ -11,7 +11,6 @@ export default function HistoricoLogs() {
     fetch("/api/logs")
       .then(res => res.json())
       .then(data => {
-        // 🔥 evita crash se API falhar
         if (Array.isArray(data)) {
           setLogs(data);
         } else {
@@ -58,6 +57,8 @@ export default function HistoricoLogs() {
 
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-blue-50/30 transition-all group">
+                  
+                  {/* DATA */}
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-3 font-bold text-slate-600 text-sm">
                       <Calendar size={16} className="text-blue-500" />
@@ -67,21 +68,21 @@ export default function HistoricoLogs() {
                     </div>
                   </td>
 
+                  {/* ALUNO */}
                   <td className="px-10 py-6 font-black text-slate-900">
                     {log?.studentName || "-"}
                   </td>
 
+                  {/* RESUMO */}
                   <td className="px-10 py-6">
                     <div className="flex gap-2">
-                      <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
-                        Alim: {log?.food || "-"}
-                      </span>
-                      <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
-                        Sono: {log?.sleep || "-"}
+                      <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
+                        Registro criado
                       </span>
                     </div>
                   </td>
 
+                  {/* AÇÕES */}
                   <td className="px-10 py-6 text-right">
                     <button
                       onClick={() => setSelectedLog(log)}
@@ -90,6 +91,7 @@ export default function HistoricoLogs() {
                       Ver Detalhes
                     </button>
                   </td>
+
                 </tr>
               ))}
             </tbody>
@@ -113,16 +115,16 @@ export default function HistoricoLogs() {
 
             <div className="space-y-2 text-sm text-slate-700">
               <p><strong>Aluno:</strong> {selectedLog?.studentName || "-"}</p>
+
               <p>
                 <strong>Data:</strong>{" "}
                 {selectedLog?.createdAt
                   ? new Date(selectedLog.createdAt).toLocaleDateString("pt-BR")
                   : "-"}
               </p>
-              <p><strong>Alimentação:</strong> {selectedLog?.food || "-"}</p>
-              <p><strong>Sono:</strong> {selectedLog?.sleep || "-"}</p>
-              <p><strong>Higiene:</strong> {selectedLog?.hygiene || "-"}</p>
-              <p><strong>Observações:</strong> {selectedLog?.observations || "-"}</p>
+
+              <p><strong>ID do Registro:</strong> {selectedLog?.id || "-"}</p>
+              <p><strong>ID do Aluno:</strong> {selectedLog?.studentId || "-"}</p>
             </div>
 
             <button
