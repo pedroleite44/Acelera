@@ -11,15 +11,21 @@ export default function HistoricoLogs() {
     fetch("/api/logs")
       .then(res => res.json())
       .then(data => {
+        console.log("API LOGS:", data); // 🔥 DEBUG
+
         if (Array.isArray(data)) {
           setLogs(data);
+        } else if (data && typeof data === "object") {
+          // 🔥 caso venha objeto estranho, tenta converter
+          setLogs([data]);
         } else {
-          console.error("Erro na API:", data);
           setLogs([]);
         }
+
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Erro fetch logs:", err);
         setLogs([]);
         setLoading(false);
       });
@@ -47,7 +53,18 @@ export default function HistoricoLogs() {
             </thead>
 
             <tbody className="divide-y divide-slate-50">
-              {logs.length === 0 && !loading && (
+
+              {/* LOADING */}
+              {loading && (
+                <tr>
+                  <td colSpan={4} className="text-center py-10 text-slate-400">
+                    Carregando...
+                  </td>
+                </tr>
+              )}
+
+              {/* SEM DADOS */}
+              {!loading && logs.length === 0 && (
                 <tr>
                   <td colSpan={4} className="text-center py-10 text-slate-400">
                     Nenhum registro encontrado
@@ -55,9 +72,10 @@ export default function HistoricoLogs() {
                 </tr>
               )}
 
-              {logs.map((log) => (
-                <tr key={log.id} className="hover:bg-blue-50/30 transition-all group">
-                  
+              {/* LISTA */}
+              {logs.map((log, index) => (
+                <tr key={log?.id || index} className="hover:bg-blue-50/30 transition-all group">
+
                   {/* DATA */}
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-3 font-bold text-slate-600 text-sm">
@@ -70,14 +88,14 @@ export default function HistoricoLogs() {
 
                   {/* ALUNO */}
                   <td className="px-10 py-6 font-black text-slate-900">
-                    {log?.studentName || "-"}
+                    {log?.studentName || "Sem nome"}
                   </td>
 
                   {/* RESUMO */}
                   <td className="px-10 py-6">
                     <div className="flex gap-2">
                       <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
-                        Registro criado
+                        Registro
                       </span>
                     </div>
                   </td>

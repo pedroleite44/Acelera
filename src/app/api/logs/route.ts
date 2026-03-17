@@ -10,11 +10,7 @@ export async function GET(req: Request) {
 
     if (studentId) {
       result = await sql`
-        SELECT 
-          id,
-          "studentId",
-          "studentName",
-          "createdAt"
+        SELECT *
         FROM "DailyLog"
         WHERE "studentId" = ${studentId}
         ORDER BY "createdAt" DESC
@@ -22,20 +18,15 @@ export async function GET(req: Request) {
       `;
     } else {
       result = await sql`
-        SELECT 
-          id,
-          "studentId",
-          "studentName",
-          "createdAt"
+        SELECT *
         FROM "DailyLog"
         ORDER BY "createdAt" DESC
         LIMIT 50
       `;
     }
 
-    return NextResponse.json(Array.isArray(result) ? result : []);
-
-  } catch (error: any) {
+    return NextResponse.json(result || []);
+  } catch (error) {
     console.error("ERRO AO BUSCAR DAILY LOG:", error);
     return NextResponse.json([]);
   }
