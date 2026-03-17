@@ -10,7 +10,15 @@ export async function GET(req: Request) {
 
     if (studentId) {
       result = await sql`
-        SELECT *
+        SELECT 
+          id,
+          "studentId",
+          "studentName",
+          food,
+          sleep,
+          hygiene,
+          observations,
+          "createdAt"
         FROM "DailyLog"
         WHERE "studentId" = ${studentId}
         ORDER BY "createdAt" DESC
@@ -18,7 +26,15 @@ export async function GET(req: Request) {
       `;
     } else {
       result = await sql`
-        SELECT *
+        SELECT 
+          id,
+          "studentId",
+          "studentName",
+          food,
+          sleep,
+          hygiene,
+          observations,
+          "createdAt"
         FROM "DailyLog"
         ORDER BY "createdAt" DESC
         LIMIT 50
@@ -26,11 +42,12 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(result);
+
   } catch (error: any) {
     console.error("ERRO AO BUSCAR DAILY LOG:", error);
 
     return NextResponse.json(
-      { error: error.message },
+      { error: "Erro ao buscar registros" },
       { status: 500 }
     );
   }
