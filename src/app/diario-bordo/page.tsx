@@ -1,7 +1,6 @@
 ﻿"use client";
 import React, { useState, useEffect } from "react";
 import {
-  Save,
   Loader2,
   LogOut,
 } from "lucide-react";
@@ -14,7 +13,7 @@ export default function DiarioBordo() {
   const [dailyInfo, setDailyInfo] = useState<any>({});
   const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState("sono");
-  const [selectedDate, setSelectedDate] = useState(
+  const [selectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [saving, setSaving] = useState(false);
@@ -70,20 +69,22 @@ export default function DiarioBordo() {
 
     setSaving(true);
 
-    for (const student of students) {
-      await fetch("/api/dailylog", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          classId: selectedClass,
-          studentId: student.id,
-          present: attendance[student.id] ?? true,
-          date: selectedDate,
-          observations: notes,
-          ...dailyInfo[student.id],
-        }),
-      });
-    }
+    await Promise.all(
+      students.map((student) =>
+        fetch("/api/save-log", { // ✅ endpoint corrigido
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            classId: selectedClass,
+            studentId: student.id,
+            present: attendance[student.id] ?? true,
+            date: selectedDate,
+            observations: notes,
+            ...dailyInfo[student.id],
+          }),
+        })
+      )
+    );
 
     setSaving(false);
     alert("Diário salvo com sucesso!");
@@ -140,8 +141,43 @@ export default function DiarioBordo() {
               className="bg-white rounded-2xl shadow-lg p-8 space-y-6"
             >
               <h2 className="text-xl font-bold text-slate-800">
-                Atividades para {student.name}
+                {student.name}
               </h2>
+
+              {/* 🔥 PRESENÇA */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() =>
+                    setAttendance((prev) => ({
+                      ...prev,
+                      [student.id]: true,
+                    }))
+                  }
+                  className={`flex-1 py-3 rounded-xl font-semibold ${
+                    attendance[student.id] !== false
+                      ? "bg-green-600 text-white"
+                      : "bg-slate-100"
+                  }`}
+                >
+                  Presente
+                </button>
+
+                <button
+                  onClick={() =>
+                    setAttendance((prev) => ({
+                      ...prev,
+                      [student.id]: false,
+                    }))
+                  }
+                  className={`flex-1 py-3 rounded-xl font-semibold ${
+                    attendance[student.id] === false
+                      ? "bg-red-600 text-white"
+                      : "bg-slate-100"
+                  }`}
+                >
+                  Faltou
+                </button>
+              </div>
 
               {/* ABAS */}
               <div className="flex border-b">
