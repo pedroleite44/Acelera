@@ -2,6 +2,8 @@
 import { sql } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
+
+// ✅ GET - listar alunos
 export async function GET() {
   try {
     const result = await sql`
@@ -17,6 +19,8 @@ export async function GET() {
   }
 }
 
+
+// ✅ POST - criar aluno
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -57,6 +61,43 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+
+// ✅ DELETE - excluir aluno
+export async function DELETE(req: Request) {
+  try {
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    // ⚠️ remove dependências primeiro (se existir)
+    await sql`
+      DELETE FROM "DailyLog"
+      WHERE "studentId" = ${id}
+    `;
+
+    // remove aluno
+    await sql`
+      DELETE FROM "Student"
+      WHERE id = ${id}
+    `;
+
+    return NextResponse.json({ success: true });
+
+  } catch (error: any) {
+    console.error("ERRO AO EXCLUIR ALUNO:", error);
+
+    return NextResponse.json(
+      { error: error.message },
       { status: 500 }
     );
   }
