@@ -9,6 +9,7 @@ import {
   Plus,
   Loader2,
   Heart,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -35,11 +36,13 @@ export default function AdminOverview() {
   const [parents, setParents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<any[]>([]);
 
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [showAddParent, setShowAddParent] = useState(false);
   const [showAddClass, setShowAddClass] = useState(false);
   const [showAddStudent, setShowAddStudent] = useState(false);
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
 
   const [teacherName, setTeacherName] = useState("");
   const [teacherEmail, setTeacherEmail] = useState("");
@@ -62,6 +65,12 @@ export default function AdminOverview() {
   const [studentClass, setStudentClass] = useState("");
   const [studentParent, setStudentParent] = useState("");
 
+  const [adminName, setAdminName] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminRg, setAdminRg] = useState("");
+  const [adminCpf, setAdminCpf] = useState("");
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -78,13 +87,14 @@ export default function AdminOverview() {
 
   const loadData = async () => {
     try {
-      const [statsRes, teachersRes, parentsRes, classesRes, studentsRes] =
+      const [statsRes, teachersRes, parentsRes, classesRes, studentsRes, adminsRes] =
         await Promise.all([
           fetch("/api/dashboard/stats"),
           fetch("/api/teachers?role=teacher"),
           fetch("/api/teachers?role=parent"),
           fetch("/api/classrooms"),
           fetch("/api/students"),
+          fetch("/api/teachers?role=admin"),
         ]);
 
       setStats(await statsRes.json());
@@ -100,12 +110,16 @@ export default function AdminOverview() {
 
       const studentsData = await studentsRes.json();
       setStudents(Array.isArray(studentsData) ? studentsData : []);
+
+      const adminsData = await adminsRes.json();
+      setAdmins(Array.isArray(adminsData) ? adminsData : []);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
       setTeachers([]);
       setParents([]);
       setClasses([]);
       setStudents([]);
+      setAdmins([]);
     } finally {
       setLoading(false);
     }
@@ -191,6 +205,51 @@ export default function AdminOverview() {
         const errorData = await res.json();
         alert(
           "Erro ao adicionar responsável: " +
+            (errorData.error || "Erro desconhecido")
+        );
+      }
+    } catch (err: any) {
+      alert("Erro de conexão: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddAdmin = async (e: any) => {
+    e.preventDefault();
+    if (!adminName || !adminEmail || !adminPassword) {
+      alert("Preencha nome, email e senha do administrador.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/teachers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: adminName,
+          email: adminEmail,
+          password: adminPassword,
+          rg: adminRg,
+          cpf: adminCpf,
+          role: "admin",
+        }),
+      });
+
+      if (res.ok) {
+        alert("✅ Administrador adicionado com sucesso!");
+        setShowAddAdmin(false);
+        setAdminName("");
+        setAdminEmail("");
+        setAdminPassword("");
+        setAdminRg("");
+        setAdminCpf("");
+        loadData();
+      } else {
+        const errorData = await res.json();
+        alert(
+          "Erro ao adicionar administrador: " +
             (errorData.error || "Erro desconhecido")
         );
       }
@@ -631,6 +690,86 @@ export default function AdminOverview() {
             </form>
           ) : (
             <p className="text-slate-500 text-sm">Clique em + para matricular aluno</p>
+          )}
+        </div>
+
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-black flex items-center gap-2">
+              <Shield size={20} className="text-purple-600" /> Novo Administrador
+            </h2>
+            {!showAddAdmin && (
+              <button
+                onClick={() => setShowAddAdmin(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg"
+              >
+                <Plus size={20} />
+              </button>
+            )}
+          </div>
+
+          {showAddAdmin ? (
+            <form onSubmit={handleAddAdmin} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Nome Completo"
+                className="w-full p-4 bg-slate-50 rounded-xl border-none font-bold"
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email de Acesso"
+                className="w-full p-4 bg-slate-50 rounded-xl border-none font-bold"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                className="w-full p-4 bg-slate-50 rounded-xl border-none font-bold"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="RG (Opcional)"
+                className="w-full p-4 bg-slate-50 rounded-xl border-none font-bold"
+                value={adminRg}
+                onChange={(e) => setAdminRg(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="CPF (Opcional)"
+                className="w-full p-4 bg-slate-50 rounded-xl border-none font-bold"
+                value={adminCpf}
+                onChange={(e) => setAdminCpf(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                >
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
+                  Adicionar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddAdmin(false)}
+                  className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-xl font-bold"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className="text-slate-500 text-sm">
+              Clique em + para adicionar administrador
+            </p>
           )}
         </div>
       </div>
