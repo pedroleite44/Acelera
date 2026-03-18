@@ -25,6 +25,15 @@ export async function POST(req: Request) {
       );
     }
 
+    // 🔥 NORMALIZA DADOS (evita undefined no banco)
+    const safePresent = present ?? true;
+    const safeMeal = meal_status ?? null;
+    const safeSleep = sleep_status ?? null;
+    const safeBehavior = behavior ?? null;
+    const safePee = diaper_pee ?? false;
+    const safePoop = diaper_poop ?? false;
+    const safeObs = observations ?? null;
+
     // 🔥 BUSCA NOME DO ALUNO
     const studentResult = await sql`
       SELECT name
@@ -49,17 +58,16 @@ export async function POST(req: Request) {
     `;
 
     if (existing.length > 0) {
-      // UPDATE
       const updated = await sql`
         UPDATE "DailyLog"
         SET
-          present = ${present},
-          meal_status = ${meal_status},
-          sleep_status = ${sleep_status},
-          behavior = ${behavior},
-          diaper_pee = ${diaper_pee},
-          diaper_poop = ${diaper_poop},
-          observations = ${observations},
+          present = ${safePresent},
+          meal_status = ${safeMeal},
+          sleep_status = ${safeSleep},
+          behavior = ${safeBehavior},
+          diaper_pee = ${safePee},
+          diaper_poop = ${safePoop},
+          observations = ${safeObs},
           "updatedAt" = NOW()
         WHERE id = ${existing[0].id}
         RETURNING *
@@ -90,13 +98,13 @@ export async function POST(req: Request) {
         ${newId},
         ${studentId},
         ${studentName},
-        ${present},
-        ${meal_status},
-        ${sleep_status},
-        ${behavior},
-        ${diaper_pee},
-        ${diaper_poop},
-        ${observations},
+        ${safePresent},
+        ${safeMeal},
+        ${safeSleep},
+        ${safeBehavior},
+        ${safePee},
+        ${safePoop},
+        ${safeObs},
         NOW(),
         NOW()
       )

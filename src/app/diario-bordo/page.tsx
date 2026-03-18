@@ -11,7 +11,6 @@ export default function DiarioBordo() {
   const [students, setStudents] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<{ [key: string]: boolean }>({});
   const [dailyInfo, setDailyInfo] = useState<any>({});
-  const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState("sono");
   const [selectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -54,7 +53,6 @@ export default function DiarioBordo() {
     setSelectedClass(classId);
     setAttendance({});
     setDailyInfo({});
-    setNotes("");
 
     const studentsRes = await fetch("/api/students");
     const allStudents = await studentsRes.json();
@@ -71,7 +69,7 @@ export default function DiarioBordo() {
 
     await Promise.all(
       students.map((student) =>
-        fetch("/api/save-log", { // ✅ endpoint corrigido
+        fetch("/api/save-log", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -79,8 +77,7 @@ export default function DiarioBordo() {
             studentId: student.id,
             present: attendance[student.id] ?? true,
             date: selectedDate,
-            observations: notes,
-            ...dailyInfo[student.id],
+            ...dailyInfo[student.id], // 🔥 agora inclui observação individual
           }),
         })
       )
@@ -144,7 +141,7 @@ export default function DiarioBordo() {
                 {student.name}
               </h2>
 
-              {/* 🔥 PRESENÇA */}
+              {/* PRESENÇA */}
               <div className="flex gap-4">
                 <button
                   onClick={() =>
@@ -294,15 +291,24 @@ export default function DiarioBordo() {
                   </label>
                 </div>
               )}
+
+              {/* 🔥 NOVO: OBSERVAÇÃO POR ALUNO */}
+              <textarea
+                placeholder="Observações sobre o aluno..."
+                className="w-full p-3 border rounded-xl mt-4"
+                value={dailyInfo[student.id]?.observations || ""}
+                onChange={(e) =>
+                  setDailyInfo((prev: any) => ({
+                    ...prev,
+                    [student.id]: {
+                      ...prev[student.id],
+                      observations: e.target.value,
+                    },
+                  }))
+                }
+              />
             </div>
           ))}
-
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Observações importantes"
-          className="w-full p-4 border rounded-xl"
-        />
 
         <button
           onClick={handleSaveAttendance}
