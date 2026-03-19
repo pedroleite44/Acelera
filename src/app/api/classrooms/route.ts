@@ -11,13 +11,15 @@ export async function GET(req: Request) {
 
     if (teacherId) {
       result = await sql`
-        SELECT * FROM "Classroom"
+        SELECT *
+        FROM "Classroom"
         WHERE "teacherId" = ${teacherId}
         ORDER BY name ASC
       `;
     } else {
       result = await sql`
-        SELECT * FROM "Classroom"
+        SELECT *
+        FROM "Classroom"
         ORDER BY name ASC
       `;
     }
@@ -31,18 +33,39 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { name, teacherId } = await req.json();
+    const { name, teacherId, shift, capacity, year } = await req.json();
+
+    if (!name) {
+      return NextResponse.json(
+        { error: "Nome da turma é obrigatório" },
+        { status: 400 }
+      );
+    }
+
     const schoolId = "a1b2c3d4-e5f6-7890-1234-567890abcdef";
     const newId = uuidv4();
 
     const result = await sql`
       INSERT INTO "Classroom"
-      (id, name, "schoolId", "teacherId", "createdAt", "updatedAt")
+      (
+        id,
+        name,
+        "schoolId",
+        "teacherId",
+        shift,
+        capacity,
+        year,
+        "createdAt",
+        "updatedAt"
+      )
       VALUES (
         ${newId},
         ${name},
         ${schoolId},
         ${teacherId || null},
+        ${shift || null},
+        ${capacity || null},
+        ${year || null},
         NOW(),
         NOW()
       )
@@ -55,8 +78,10 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
+    console.error("ERRO AO CRIAR TURMA:", error);
+
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || "Erro interno" },
       { status: 500 }
     );
   }
