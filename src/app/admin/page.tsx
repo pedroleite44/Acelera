@@ -94,7 +94,7 @@ export default function AdminOverview() {
           fetch("/api/teachers?role=parent"),
           fetch("/api/classrooms"),
           fetch("/api/students"),
-          fetch("/api/teachers?role=admin"),
+          fetch("/api/users?role=admin"),
         ]);
 
       setStats(await statsRes.json());
@@ -134,7 +134,7 @@ export default function AdminOverview() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/teachers", {
+      const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -179,7 +179,7 @@ export default function AdminOverview() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/teachers", {
+      const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

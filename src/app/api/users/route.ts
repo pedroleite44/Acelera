@@ -8,19 +8,25 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const role = searchParams.get("role");
 
-    let query = `SELECT id, name, email, rg, cpf, role FROM "User"`;
-    const params: any[] = [];
+    let result;
 
     if (role) {
-      query += ` WHERE role = $1`;
-      params.push(role);
+      result = await sql`
+        SELECT id, name, email, rg, cpf, role
+        FROM "User"
+        WHERE role = ${role}
+        ORDER BY name ASC
+      `;
+    } else {
+      result = await sql`
+        SELECT id, name, email, rg, cpf, role
+        FROM "User"
+        ORDER BY name ASC
+      `;
     }
 
-    query += ` ORDER BY name ASC`;
+    return NextResponse.json(result);
 
-    const result = await sql.query(query, params);
-
-    return NextResponse.json(result.rows);
   } catch (error: any) {
     console.error("ERRO AO BUSCAR USUÁRIOS:", error);
     return NextResponse.json([], { status: 200 });
@@ -81,7 +87,7 @@ export async function POST(req: Request) {
     console.error("ERRO AO CRIAR USUÁRIO:", error);
 
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || "Erro interno" },
       { status: 500 }
     );
   }
