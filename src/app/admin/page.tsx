@@ -224,7 +224,7 @@ export default function AdminOverview() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/teachers", {
+      const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
