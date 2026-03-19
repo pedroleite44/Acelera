@@ -2,6 +2,7 @@
 import { sql } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
+// 🔍 GET
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -31,6 +32,7 @@ export async function GET(req: Request) {
   }
 }
 
+// ➕ POST
 export async function POST(req: Request) {
   try {
     const { name, teacherId, shift, capacity, year } = await req.json();
@@ -79,6 +81,45 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("ERRO AO CRIAR TURMA:", error);
+
+    return NextResponse.json(
+      { error: error.message || "Erro interno" },
+      { status: 500 }
+    );
+  }
+}
+
+// ✏️ PUT (EDITAR TURMA)
+export async function PUT(req: Request) {
+  try {
+    const { id, name, shift, capacity, year } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    const result = await sql`
+      UPDATE "Classroom"
+      SET
+        name = ${name},
+        shift = ${shift || null},
+        capacity = ${capacity || null},
+        year = ${year || null},
+        "updatedAt" = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    return NextResponse.json({
+      success: true,
+      classroom: result[0],
+    });
+
+  } catch (error: any) {
+    console.error("ERRO AO ATUALIZAR TURMA:", error);
 
     return NextResponse.json(
       { error: error.message || "Erro interno" },

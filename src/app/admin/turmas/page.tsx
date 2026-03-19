@@ -21,16 +21,21 @@ export default function GestaoTurmas() {
 
   const [saving, setSaving] = useState(false);
 
+  // 🔥 NOVOS ESTADOS
+  const [selectedClass, setSelectedClass] = useState<Classroom | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+
   useEffect(() => { fetchClasses(); }, []);
 
   const fetchClasses = async () => {
     try {
       const res = await fetch("/api/classrooms");
       if (res.ok) setClasses(await res.json());
-    } catch (e) { 
-      console.error("Erro ao buscar turmas", e); 
-    } finally { 
-      setLoading(false); 
+    } catch (e) {
+      console.error("Erro ao buscar turmas", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +61,6 @@ export default function GestaoTurmas() {
       });
 
       if (res.ok) {
-        alert("Turma criada!");
         setNewClassName("");
         setClassShift("");
         setClassCapacity("");
@@ -70,12 +74,29 @@ export default function GestaoTurmas() {
     }
   };
 
+  // 🔥 DELETE
+  const handleDeleteClass = async (id: string) => {
+    if (!confirm("Deseja excluir essa turma?")) return;
+
+    try {
+      const res = await fetch(`/api/classrooms/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        fetchClasses();
+      } else {
+        alert("Erro ao deletar");
+      }
+    } catch {
+      alert("Erro de conexão");
+    }
+  };
+
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-10 bg-[#F8FAFC] min-h-screen">
-      
-      <div>
-        <h1 className="text-4xl font-black">Turmas</h1>
-      </div>
+
+      <h1 className="text-4xl font-black">Turmas</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
@@ -136,7 +157,11 @@ export default function GestaoTurmas() {
 
               <div className="flex justify-between">
                 <School />
-                <Trash2 className="text-red-500 cursor-pointer" />
+
+                <Trash2
+                  onClick={() => handleDeleteClass(c.id)}
+                  className="text-red-500 cursor-pointer"
+                />
               </div>
 
               <h3 className="font-black text-xl">{c.name}</h3>
@@ -147,20 +172,27 @@ export default function GestaoTurmas() {
                 {c.shift === "night" && "Noite"}
               </p>
 
-              <p className="text-sm">
-                Capacidade: {c.capacity || "∞"}
-              </p>
-
-              <p className="text-sm">
-                Ano: {c.year || "-"}
-              </p>
+              <p>Capacidade: {c.capacity || "∞"}</p>
+              <p>Ano: {c.year || "-"}</p>
 
               <div className="flex gap-2">
-                <button className="flex-1 bg-blue-600 text-white py-2 rounded-xl">
+                <button
+                  onClick={() => {
+                    setSelectedClass(c);
+                    setShowDetails(true);
+                  }}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-xl"
+                >
                   Detalhes
                 </button>
 
-                <button className="flex-1 bg-yellow-500 text-white py-2 rounded-xl">
+                <button
+                  onClick={() => {
+                    setSelectedClass(c);
+                    setShowEdit(true);
+                  }}
+                  className="flex-1 bg-yellow-500 text-white py-2 rounded-xl"
+                >
                   Editar
                 </button>
               </div>
@@ -168,9 +200,63 @@ export default function GestaoTurmas() {
             </div>
 
           ))}
-
         </div>
       </div>
+
+      {/* MODAL DETALHES */}
+      {showDetails && selectedClass && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl space-y-4 w-[350px]">
+            <h2 className="font-black text-xl">Detalhes</h2>
+            <p>Nome: {selectedClass.name}</p>
+            <p>Turno: {selectedClass.shift || "-"}</p>
+            <p>Capacidade: {selectedClass.capacity || "-"}</p>
+            <p>Ano: {selectedClass.year || "-"}</p>
+
+            <button
+              onClick={() => setShowDetails(false)}
+              className="w-full bg-blue-600 text-white py-2 rounded-xl"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDITAR */}
+      {showEdit && selectedClass && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl space-y-4 w-[350px]">
+            <h2 className="font-black text-xl">Editar</h2>
+
+            <input
+              value={selectedClass.name}
+              onChange={(e) =>
+                setSelectedClass({ ...selectedClass, name: e.target.value })
+              }
+              className="w-full p-3 bg-slate-100 rounded"
+            />
+
+            <button
+              onClick={() => {
+                alert("Salvar edição (próximo passo)");
+                setShowEdit(false);
+              }}
+              className="w-full bg-yellow-500 text-white py-2 rounded-xl"
+            >
+              Salvar
+            </button>
+
+            <button
+              onClick={() => setShowEdit(false)}
+              className="w-full bg-gray-300 py-2 rounded-xl"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
