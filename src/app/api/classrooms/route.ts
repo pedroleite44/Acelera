@@ -89,7 +89,7 @@ export async function POST(req: Request) {
   }
 }
 
-// ✏️ PUT (EDITAR TURMA)
+// ✏️ PUT (EDITAR)
 export async function PUT(req: Request) {
   try {
     const { id, name, shift, capacity, year } = await req.json();
@@ -120,6 +120,36 @@ export async function PUT(req: Request) {
 
   } catch (error: any) {
     console.error("ERRO AO ATUALIZAR TURMA:", error);
+
+    return NextResponse.json(
+      { error: error.message || "Erro interno" },
+      { status: 500 }
+    );
+  }
+}
+
+// 🗑️ DELETE (🔥 FALTAVA ISSO)
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    await sql`
+      DELETE FROM "Classroom"
+      WHERE id = ${id}
+    `;
+
+    return NextResponse.json({ success: true });
+
+  } catch (error: any) {
+    console.error("ERRO AO DELETAR TURMA:", error);
 
     return NextResponse.json(
       { error: error.message || "Erro interno" },

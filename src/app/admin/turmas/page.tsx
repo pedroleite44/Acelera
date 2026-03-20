@@ -21,7 +21,6 @@ export default function GestaoTurmas() {
 
   const [saving, setSaving] = useState(false);
 
-  // 🔥 NOVOS ESTADOS
   const [selectedClass, setSelectedClass] = useState<Classroom | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -74,7 +73,7 @@ export default function GestaoTurmas() {
     }
   };
 
-  // 🔥 DELETE
+  // DELETE
   const handleDeleteClass = async (id: string) => {
     if (!confirm("Deseja excluir essa turma?")) return;
 
@@ -83,10 +82,30 @@ export default function GestaoTurmas() {
         method: "DELETE",
       });
 
+      if (res.ok) fetchClasses();
+      else alert("Erro ao deletar");
+    } catch {
+      alert("Erro de conexão");
+    }
+  };
+
+  // 🔥 UPDATE (EDITAR)
+  const handleUpdateClass = async () => {
+    if (!selectedClass) return;
+
+    try {
+      const res = await fetch("/api/classrooms", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selectedClass),
+      });
+
       if (res.ok) {
+        alert("Turma atualizada!");
+        setShowEdit(false);
         fetchClasses();
       } else {
-        alert("Erro ao deletar");
+        alert("Erro ao atualizar");
       }
     } catch {
       alert("Erro de conexão");
@@ -223,10 +242,11 @@ export default function GestaoTurmas() {
         </div>
       )}
 
-      {/* MODAL EDITAR */}
+      {/* 🔥 MODAL EDITAR COMPLETO */}
       {showEdit && selectedClass && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl space-y-4 w-[350px]">
+
             <h2 className="font-black text-xl">Editar</h2>
 
             <input
@@ -235,13 +255,46 @@ export default function GestaoTurmas() {
                 setSelectedClass({ ...selectedClass, name: e.target.value })
               }
               className="w-full p-3 bg-slate-100 rounded"
+              placeholder="Nome"
+            />
+
+            <select
+              value={selectedClass.shift || ""}
+              onChange={(e) =>
+                setSelectedClass({ ...selectedClass, shift: e.target.value })
+              }
+              className="w-full p-3 bg-slate-100 rounded"
+            >
+              <option value="">Turno</option>
+              <option value="morning">Manhã</option>
+              <option value="afternoon">Tarde</option>
+              <option value="night">Noite</option>
+            </select>
+
+            <input
+              type="number"
+              value={selectedClass.capacity || ""}
+              onChange={(e) =>
+                setSelectedClass({
+                  ...selectedClass,
+                  capacity: Number(e.target.value),
+                })
+              }
+              className="w-full p-3 bg-slate-100 rounded"
+              placeholder="Capacidade"
+            />
+
+            <input
+              value={selectedClass.year || ""}
+              onChange={(e) =>
+                setSelectedClass({ ...selectedClass, year: e.target.value })
+              }
+              className="w-full p-3 bg-slate-100 rounded"
+              placeholder="Ano"
             />
 
             <button
-              onClick={() => {
-                alert("Salvar edição (próximo passo)");
-                setShowEdit(false);
-              }}
+              onClick={handleUpdateClass}
               className="w-full bg-yellow-500 text-white py-2 rounded-xl"
             >
               Salvar
@@ -253,6 +306,7 @@ export default function GestaoTurmas() {
             >
               Cancelar
             </button>
+
           </div>
         </div>
       )}
